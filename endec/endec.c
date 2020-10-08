@@ -36,6 +36,7 @@
 #define OPT_DECODE_URL 'U'
 #define OPT_FORM 'f'
 #define OPT_DECODE_FORM 'F'
+#define OPT_PATH 'p'
 #define OPT_ENTITY 'e'
 #define OPT_DECODE_ENTITY 'E'
 #define OPT_ECHO 'c'
@@ -85,6 +86,12 @@ static const apr_getopt_option_t
         OPT_DECODE_FORM,
         0,
         "  -F, --form-unescape  URL unescape data as defined in HTML5, with '+' converted to spaces"
+    },
+    {
+        "path-escape",
+        OPT_PATH,
+        0,
+        "  -p, --path-escape  Escape a filesystem path to be embedded in a URL"
     },
     {
         "entity-escape",
@@ -482,6 +489,18 @@ int main(int argc, const char * const argv[])
             if (!result) {
                 apr_file_printf(err,
                         "Could not form url unescape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_PATH: {
+
+            result = apr_pescape_path(pool, result, 1);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not escape the path.\n");
                 return 1;
             }
             size = strlen(result);
