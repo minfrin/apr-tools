@@ -24,6 +24,7 @@
 
 #include <apr.h>
 #include <apr_encode.h>
+#include <apr_escape.h>
 #include <apr_file_io.h>
 #include <apr_getopt.h>
 #include <apr_strings.h>
@@ -31,6 +32,9 @@
 #include "config.h"
 
 
+#define OPT_LDAP 'l'
+#define OPT_LDAP_DN 245
+#define OPT_LDAP_FILTER 246
 #define OPT_BASE64 'b'
 #define OPT_BASE64URL 247
 #define OPT_BASE64URL_NOPAD 248
@@ -50,6 +54,24 @@ static const apr_getopt_option_t
     cmdline_opts[] =
 {
     /* commands */
+    {
+        "ldap-escape",
+		OPT_LDAP,
+        0,
+        "  -l, --ldap-escape  LDAP escape data as per RFC4514 and RFC4515"
+    },
+    {
+        "ldapdn-escape",
+		OPT_LDAP_DN,
+        0,
+        "  --ldapdn-escape  LDAP escape distinguished name data as per RFC4514"
+    },
+    {
+        "ldapfilter-escape",
+		OPT_LDAP_FILTER,
+        0,
+        "  --ldapfilter-escape  LDAP escape filter data as per RFC4515"
+    },
     {
         "base64-encode",
 		OPT_BASE64,
@@ -360,6 +382,42 @@ int main(int argc, const char * const argv[])
             == APR_SUCCESS) {
 
         switch (optch) {
+        case OPT_LDAP: {
+
+        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_ALL);
+        	if (!result) {
+                apr_file_printf(err,
+                        "Could not ldap escape data.\n");
+                return 1;
+        	}
+        	size = strlen(result);
+
+         	break;
+        }
+        case OPT_LDAP_DN: {
+
+        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_DN);
+        	if (!result) {
+                apr_file_printf(err,
+                        "Could not ldap escape distinguished name data.\n");
+                return 1;
+        	}
+        	size = strlen(result);
+
+         	break;
+        }
+        case OPT_LDAP_FILTER: {
+
+        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_FILTER);
+        	if (!result) {
+                apr_file_printf(err,
+                        "Could not ldap escape filter data.\n");
+                return 1;
+        	}
+        	size = strlen(result);
+
+         	break;
+        }
         case OPT_BASE64: {
 
         	result = apr_pencode_base64(pool, result, size, APR_ENCODE_NONE, &size);
