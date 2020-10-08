@@ -32,6 +32,10 @@
 #include "config.h"
 
 
+#define OPT_ENTITY 'e'
+#define OPT_DECODE_ENTITY 'E'
+#define OPT_ECHO 'c'
+#define OPT_ECHOQUOTE 244
 #define OPT_LDAP 'l'
 #define OPT_LDAP_DN 245
 #define OPT_LDAP_FILTER 246
@@ -54,6 +58,30 @@ static const apr_getopt_option_t
     cmdline_opts[] =
 {
     /* commands */
+    {
+        "entity-escape",
+        OPT_ENTITY,
+        0,
+        "  -e, --entity-escape  Entity escape data for XML"
+    },
+    {
+        "entity-unescape",
+        OPT_DECODE_ENTITY,
+        0,
+        "  -E, --entity-unescape  Entity unescape data for XML"
+    },
+    {
+        "echo-escape",
+        OPT_ECHO,
+        0,
+        "  -c, --echo-escape  Shell escape data as per echo"
+    },
+    {
+        "echoquote-escape",
+        OPT_ECHOQUOTE,
+        0,
+        "  --echoquote-escape  Shell escape data as per echo, including quotes"
+    },
     {
         "ldap-escape",
         OPT_LDAP,
@@ -195,7 +223,7 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "  %s - Encode / decode / escape / unescape data.\n"
             "\n"
             "SYNOPSIS\n"
-            "  %s [-v] [-h] [-b] [-B] [string]\n"
+            "  %s [-v] [-h] [-r file] [-w file] [...] [string]\n"
             "\n"
             "DESCRIPTION\n"
             "  The tool applies each specified transformation to the given data in turn,\n"
@@ -225,7 +253,7 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "EXAMPLES\n"
             "  In this example, we decode the base64 string, then entity encode the result.\n"
             "\n"
-            "\t~$ encdec --base64-decode --entity-encode \"VGhpcyAmIHRoYXQK\"\n"
+            "\t~$ encdec --base64-decode --entity-escape \"VGhpcyAmIHRoYXQK\"\n"
             "\tThis &amp; that\n"
             "\n"
             "AUTHOR\n"
@@ -355,7 +383,7 @@ int main(int argc, const char * const argv[])
         off = buffer = malloc(len);
 
         while (APR_SUCCESS
-                == (status = apr_file_read_full(rd, off, len - (off - buffer),
+                == (status = apr_file_read_full(rd, off, len - (off - buffer) - 1,
                         &l))) {
 
             size += l;
@@ -371,6 +399,8 @@ int main(int argc, const char * const argv[])
 
         size += l;
 
+        buffer[size] = 0;
+
     }
 
     apr_pool_cleanup_register(pool, buffer, cleanup_buffer, cleanup_buffer);
@@ -382,6 +412,54 @@ int main(int argc, const char * const argv[])
             == APR_SUCCESS) {
 
         switch (optch) {
+        case OPT_ENTITY: {
+
+            result = apr_pescape_entity(pool, result, 1);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not entity escape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_DECODE_ENTITY: {
+
+            result = apr_punescape_entity(pool, result);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not entity unescape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_ECHO: {
+
+            result = apr_pescape_echo(pool, result, 0);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not echo escape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_ECHOQUOTE: {
+
+            result = apr_pescape_echo(pool, result, 1);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not quote echo escape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
         case OPT_LDAP: {
 
             result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_ALL);
@@ -392,7 +470,7 @@ int main(int argc, const char * const argv[])
             }
             size = strlen(result);
 
-             break;
+            break;
         }
         case OPT_LDAP_DN: {
 
@@ -404,7 +482,7 @@ int main(int argc, const char * const argv[])
             }
             size = strlen(result);
 
-             break;
+            break;
         }
         case OPT_LDAP_FILTER: {
 
@@ -416,7 +494,7 @@ int main(int argc, const char * const argv[])
             }
             size = strlen(result);
 
-             break;
+            break;
         }
         case OPT_BASE64: {
 
@@ -427,7 +505,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE64URL: {
 
@@ -438,7 +516,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE64URL_NOPAD: {
 
@@ -449,7 +527,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_DECODE_BASE64: {
 
@@ -471,7 +549,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE32HEX: {
 
@@ -482,7 +560,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE32HEX_NOPAD: {
 
@@ -493,7 +571,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_DECODE_BASE32: {
 
@@ -515,7 +593,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE16: {
 
@@ -526,7 +604,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE16COLON: {
 
@@ -537,7 +615,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE16LOWER: {
 
@@ -548,7 +626,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_BASE16COLONLOWER: {
 
@@ -559,7 +637,7 @@ int main(int argc, const char * const argv[])
                 return 1;
             }
 
-             break;
+            break;
         }
         case OPT_DECODE_BASE16: {
 
