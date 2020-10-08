@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <apr.h>
 #include <apr_encode.h>
@@ -304,6 +305,13 @@ static int version(apr_file_t *out)
     return 0;
 }
 
+static int abortfunc(int retcode)
+{
+    fprintf(stderr, "Out of memory.");
+
+    return retcode;
+}
+
 static apr_status_t cleanup_buffer(void *dummy)
 {
     free(dummy);
@@ -335,7 +343,7 @@ int main(int argc, const char * const argv[])
     }
     atexit(apr_terminate);
 
-    if (APR_SUCCESS != (status = apr_pool_create(&pool, NULL))) {
+    if (APR_SUCCESS != (status = apr_pool_create_ex(&pool, NULL, abortfunc, NULL))) {
         return 1;
     }
 
