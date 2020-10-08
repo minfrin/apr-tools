@@ -32,6 +32,10 @@
 #include "config.h"
 
 
+#define OPT_URL 'u'
+#define OPT_DECODE_URL 'U'
+#define OPT_FORM 'f'
+#define OPT_DECODE_FORM 'F'
 #define OPT_ENTITY 'e'
 #define OPT_DECODE_ENTITY 'E'
 #define OPT_ECHO 'c'
@@ -58,6 +62,30 @@ static const apr_getopt_option_t
     cmdline_opts[] =
 {
     /* commands */
+    {
+        "url-escape",
+        OPT_URL,
+        0,
+        "  -u, --url-escape  URL escape data as defined in HTML5"
+    },
+    {
+        "url-unescape",
+        OPT_DECODE_URL,
+        0,
+        "  -U, --url-unescape  URL unescape data as defined in HTML5"
+    },
+    {
+        "form-escape",
+        OPT_FORM,
+        0,
+        "  -f, --form-escape  URL escape data as defined in HTML5, with spaces converted to '+'"
+    },
+    {
+        "form-unescape",
+        OPT_DECODE_FORM,
+        0,
+        "  -F, --form-unescape  URL unescape data as defined in HTML5, with '+' converted to spaces"
+    },
     {
         "entity-escape",
         OPT_ENTITY,
@@ -253,7 +281,7 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "EXAMPLES\n"
             "  In this example, we decode the base64 string, then entity encode the result.\n"
             "\n"
-            "\t~$ encdec --base64-decode --entity-escape \"VGhpcyAmIHRoYXQK\"\n"
+            "\t~$ endec --base64-decode --entity-escape \"VGhpcyAmIHRoYXQK\"\n"
             "\tThis &amp; that\n"
             "\n"
             "AUTHOR\n"
@@ -412,6 +440,54 @@ int main(int argc, const char * const argv[])
             == APR_SUCCESS) {
 
         switch (optch) {
+        case OPT_URL: {
+
+            result = apr_pescape_path_segment(pool, result);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not url escape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_DECODE_URL: {
+
+            result = apr_punescape_url(pool, result, NULL, NULL, 0);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not url unescape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_FORM: {
+
+            result = apr_pescape_urlencoded(pool, result);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not form url escape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
+        case OPT_DECODE_FORM: {
+
+            result = apr_punescape_url(pool, result, NULL, NULL, 1);
+            if (!result) {
+                apr_file_printf(err,
+                        "Could not form url unescape data.\n");
+                return 1;
+            }
+            size = strlen(result);
+
+            break;
+        }
         case OPT_ENTITY: {
 
             result = apr_pescape_entity(pool, result, 1);
