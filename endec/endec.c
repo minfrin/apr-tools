@@ -56,31 +56,31 @@ static const apr_getopt_option_t
     /* commands */
     {
         "ldap-escape",
-		OPT_LDAP,
+        OPT_LDAP,
         0,
         "  -l, --ldap-escape  LDAP escape data as per RFC4514 and RFC4515"
     },
     {
         "ldapdn-escape",
-		OPT_LDAP_DN,
+        OPT_LDAP_DN,
         0,
         "  --ldapdn-escape  LDAP escape distinguished name data as per RFC4514"
     },
     {
         "ldapfilter-escape",
-		OPT_LDAP_FILTER,
+        OPT_LDAP_FILTER,
         0,
         "  --ldapfilter-escape  LDAP escape filter data as per RFC4515"
     },
     {
         "base64-encode",
-		OPT_BASE64,
+        OPT_BASE64,
         0,
         "  -b, --base64-encode  Encode data as base64 as per RFC4648 section 4"
     },
     {
         "base64url-encode",
-		OPT_BASE64URL,
+        OPT_BASE64URL,
         0,
         "  --base64url-encode  Encode data as base64url as per RFC4648 section 5"
     },
@@ -92,67 +92,67 @@ static const apr_getopt_option_t
     },
     {
         "base64-decode",
-		OPT_DECODE_BASE64,
+        OPT_DECODE_BASE64,
         0,
         "  -B, --base64-decode  Decode data as base64 or base64url"
     },
     {
         "base32-encode",
-		OPT_BASE32,
+        OPT_BASE32,
         0,
         "  -t, --base32-encode  Encode data as base32 as per RFC4648 section 6"
     },
     {
         "base32hex-encode",
-		OPT_BASE32HEX,
+        OPT_BASE32HEX,
         0,
         "  --base32hex-encode  Encode data as base32hex as per RFC4648 section 7"
     },
     {
         "base32hex-nopad-encode",
-		OPT_BASE32HEX_NOPAD,
+        OPT_BASE32HEX_NOPAD,
         0,
         "  --base32hex-nopad-encode  Encode data as base32hex with no padding as per RFC4648 section 7"
     },
     {
         "base32-decode",
-		OPT_DECODE_BASE32,
+        OPT_DECODE_BASE32,
         0,
         "  -T, --base32-decode  Decode data as base32"
     },
     {
         "base32hex-decode",
-		OPT_DECODE_BASE32HEX,
+        OPT_DECODE_BASE32HEX,
         0,
         "  --base32hex-decode  Decode data as base32hex"
     },
     {
         "base16-encode",
-		OPT_BASE16,
+        OPT_BASE16,
         0,
         "  -s, --base16-encode  Encode data as base16 as per RFC4648 section 8"
     },
     {
         "base16colon-encode",
-		OPT_BASE16COLON,
+        OPT_BASE16COLON,
         0,
         "  --base16colon-encode  Encode data as base16 separated with colons"
     },
     {
         "base16-lower-encode",
-		OPT_BASE16LOWER,
+        OPT_BASE16LOWER,
         0,
         "  --base16-lower-encode  Encode data as base16 in lower case"
     },
     {
         "base16colon-lower-encode",
-		OPT_BASE16COLONLOWER,
+        OPT_BASE16COLONLOWER,
         0,
         "  --base16colon-lower-encode  Encode data as base16 with colons in lower case"
     },
     {
         "base16-decode",
-		OPT_DECODE_BASE16,
+        OPT_DECODE_BASE16,
         0,
         "  -S, --base16-decode  Decode data as base16"
     },
@@ -175,7 +175,7 @@ static const apr_getopt_option_t
 };
 
 static int help(apr_file_t *out, const char *name, const char *msg, int code,
-		const apr_getopt_option_t opts[])
+        const apr_getopt_option_t opts[])
 {
     const char *n;
     int i = 0;
@@ -202,18 +202,18 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "  returning the result on stdout.\n"
             "\n"
             "  In most typical scenarios, data in one format needs to be decoded or\n"
-    		"  unescaped from a source format and then immediately encoded or escaped\n"
-    		"  into another format for safe use. By specifying multiple transformations\n"
-    		"  data can be be passed from one encoding to another.\n"
+            "  unescaped from a source format and then immediately encoded or escaped\n"
+            "  into another format for safe use. By specifying multiple transformations\n"
+            "  data can be be passed from one encoding to another.\n"
             "\n"
             "  Decoding and unescaping is performed securely, meaning that any input data\n"
-    		"  that cannot be decoded or unescaped will cause the tool to exit with a non\n"
-    		"  zero exit code.\n"
+            "  that cannot be decoded or unescaped will cause the tool to exit with a non\n"
+            "  zero exit code.\n"
             "\n"
             "OPTIONS\n", msg ? msg : "", n, n);
 
     while (opts[i].name) {
-    	apr_file_printf(out, "%s\n\n", opts[i].description);
+        apr_file_printf(out, "%s\n\n", opts[i].description);
         i++;
     }
 
@@ -243,7 +243,7 @@ static int version(apr_file_t *out)
 
 static apr_status_t cleanup_buffer(void *dummy)
 {
-	free(dummy);
+    free(dummy);
 
     return APR_SUCCESS;
 }
@@ -324,59 +324,59 @@ int main(int argc, const char * const argv[])
     }
 
     /* read the source */
-	if (opt->ind < argc) {
-		char *off;
-		int ind = opt->ind;
+    if (opt->ind < argc) {
+        char *off;
+        int ind = opt->ind;
 
-		while (ind < argc) {
-			if (ind > opt->ind) {
-				size++;
-			}
-			size += strlen(opt->argv[ind]);
-			ind++;
-		}
+        while (ind < argc) {
+            if (ind > opt->ind) {
+                size++;
+            }
+            size += strlen(opt->argv[ind]);
+            ind++;
+        }
 
-		off = buffer = malloc(size + 1);
-		ind = opt->ind;
+        off = buffer = malloc(size + 1);
+        ind = opt->ind;
 
-		while (ind < argc) {
-			if (ind > opt->ind) {
-				strcpy(off++, " ");
-			}
-			strcpy(off, opt->argv[ind]);
-			off += strlen(opt->argv[ind]);
-			ind++;
-		}
+        while (ind < argc) {
+            if (ind > opt->ind) {
+                strcpy(off++, " ");
+            }
+            strcpy(off, opt->argv[ind]);
+            off += strlen(opt->argv[ind]);
+            ind++;
+        }
 
-	} else {
-		char *off;
-		apr_size_t len = 1024;
+    } else {
+        char *off;
+        apr_size_t len = 1024;
 
-		off = buffer = malloc(len);
+        off = buffer = malloc(len);
 
-		while (APR_SUCCESS
-				== (status = apr_file_read_full(rd, off, len - (off - buffer),
-						&l))) {
+        while (APR_SUCCESS
+                == (status = apr_file_read_full(rd, off, len - (off - buffer),
+                        &l))) {
 
-			size += l;
-			len *= 2;
+            size += l;
+            len *= 2;
 
-			buffer = realloc(buffer, len);
-			if (!buffer) {
-				return 1;
-			}
+            buffer = realloc(buffer, len);
+            if (!buffer) {
+                return 1;
+            }
 
-			off = buffer + size;
-		}
+            off = buffer + size;
+        }
 
-		size += l;
+        size += l;
 
-	}
+    }
 
     apr_pool_cleanup_register(pool, buffer, cleanup_buffer, cleanup_buffer);
     result = buffer;
 
-	/* apply the transformation */
+    /* apply the transformation */
     apr_getopt_init(&opt, pool, argc, argv);
     while ((status = apr_getopt_long(opt, cmdline_opts, &optch, &optarg))
             == APR_SUCCESS) {
@@ -384,205 +384,205 @@ int main(int argc, const char * const argv[])
         switch (optch) {
         case OPT_LDAP: {
 
-        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_ALL);
-        	if (!result) {
+            result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_ALL);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not ldap escape data.\n");
                 return 1;
-        	}
-        	size = strlen(result);
+            }
+            size = strlen(result);
 
-         	break;
+             break;
         }
         case OPT_LDAP_DN: {
 
-        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_DN);
-        	if (!result) {
+            result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_DN);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not ldap escape distinguished name data.\n");
                 return 1;
-        	}
-        	size = strlen(result);
+            }
+            size = strlen(result);
 
-         	break;
+             break;
         }
         case OPT_LDAP_FILTER: {
 
-        	result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_FILTER);
-        	if (!result) {
+            result = apr_pescape_ldap(pool, result, size, APR_ESCAPE_LDAP_FILTER);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not ldap escape filter data.\n");
                 return 1;
-        	}
-        	size = strlen(result);
+            }
+            size = strlen(result);
 
-         	break;
+             break;
         }
         case OPT_BASE64: {
 
-        	result = apr_pencode_base64(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pencode_base64(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base64 encode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE64URL: {
 
-        	result = apr_pencode_base64(pool, result, size, APR_ENCODE_URL, &size);
-        	if (!result) {
+            result = apr_pencode_base64(pool, result, size, APR_ENCODE_URL, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base64url encode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE64URL_NOPAD: {
 
-        	result = apr_pencode_base64(pool, result, size, APR_ENCODE_BASE64URL, &size);
-        	if (!result) {
+            result = apr_pencode_base64(pool, result, size, APR_ENCODE_BASE64URL, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base64url encode data with no padding.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_DECODE_BASE64: {
 
-        	result = apr_pdecode_base64(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pdecode_base64(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base64 decode data, bad characters encountered.\n");
                 return 1;
-        	}
+            }
 
-        	break;
+            break;
         }
         case OPT_BASE32: {
 
-        	result = apr_pencode_base32(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pencode_base32(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base64 encode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE32HEX: {
 
-        	result = apr_pencode_base32(pool, result, size, APR_ENCODE_BASE32HEX, &size);
-        	if (!result) {
+            result = apr_pencode_base32(pool, result, size, APR_ENCODE_BASE32HEX, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base32hex encode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE32HEX_NOPAD: {
 
-        	result = apr_pencode_base32(pool, result, size, APR_ENCODE_BASE32HEX | APR_ENCODE_NOPADDING, &size);
-        	if (!result) {
+            result = apr_pencode_base32(pool, result, size, APR_ENCODE_BASE32HEX | APR_ENCODE_NOPADDING, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base32hex encode data with no padding.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_DECODE_BASE32: {
 
-        	result = apr_pdecode_base32(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pdecode_base32(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base32 decode data, bad characters encountered.\n");
                 return 1;
-        	}
+            }
 
-        	break;
+            break;
         }
         case OPT_DECODE_BASE32HEX: {
 
-        	result = apr_pdecode_base32(pool, result, size, APR_ENCODE_BASE32HEX, &size);
-        	if (!result) {
+            result = apr_pdecode_base32(pool, result, size, APR_ENCODE_BASE32HEX, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base32hex decode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE16: {
 
-        	result = apr_pencode_base16(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pencode_base16(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base16 encode data.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE16COLON: {
 
-        	result = apr_pencode_base16(pool, result, size, APR_ENCODE_COLON, &size);
-        	if (!result) {
+            result = apr_pencode_base16(pool, result, size, APR_ENCODE_COLON, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base16 encode data separated with colons.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE16LOWER: {
 
-        	result = apr_pencode_base16(pool, result, size, APR_ENCODE_LOWER, &size);
-        	if (!result) {
+            result = apr_pencode_base16(pool, result, size, APR_ENCODE_LOWER, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base16 encode data in lower case.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_BASE16COLONLOWER: {
 
-        	result = apr_pencode_base16(pool, result, size, APR_ENCODE_COLON | APR_ENCODE_LOWER, &size);
-        	if (!result) {
+            result = apr_pencode_base16(pool, result, size, APR_ENCODE_COLON | APR_ENCODE_LOWER, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base16 encode data separated with colons in lower case.\n");
                 return 1;
-        	}
+            }
 
-         	break;
+             break;
         }
         case OPT_DECODE_BASE16: {
 
-        	result = apr_pdecode_base16(pool, result, size, APR_ENCODE_NONE, &size);
-        	if (!result) {
+            result = apr_pdecode_base16(pool, result, size, APR_ENCODE_NONE, &size);
+            if (!result) {
                 apr_file_printf(err,
                         "Could not base16 decode data, bad characters encountered.\n");
                 return 1;
-        	}
+            }
 
-        	break;
+            break;
         }
         }
 
     }
 
-	/* write the destination */
-	status = apr_file_write_full(wr, result, size, &l);
+    /* write the destination */
+    status = apr_file_write_full(wr, result, size, &l);
     if (status != APR_SUCCESS) {
         apr_file_printf(err,
                 "Could not write: %pm\n", &status);
         return 1;
     }
 
-	return 0;
+    return 0;
 }
