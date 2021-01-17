@@ -1,24 +1,29 @@
-NAME
-       endec - Encode / decode / escape / unescape data.
+# NAME
 
-SYNOPSIS
-       endec [-v] [-h] [-r file] [-w file] [...] [string]
+endec - Encode / decode / escape / unescape data.
 
+# SYNOPSIS
 
-DESCRIPTION
-       The  tool  applies  each  specified transformation to the given data in
-       turn, returning the result on stdout.
+```
+endec [-v] [-h] [-r file] [-w file] [...] [string]
+```
 
-       In most typical scenarios, data in one format needs to  be  decoded  or
-       unescaped  from a source format and then immediately encoded or escaped
-       into another format for safe use. By  specifying  multiple  transforma-
-       tions data can be be passed from one encoding to another.
+# DESCRIPTION
 
-       Decoding  and  unescaping is performed securely, meaning that any input
-       data that cannot be decoded or unescaped will cause the  tool  to  exit
-       with a non zero exit code.
+The  tool  applies  each  specified transformation to the given data in
+turn, returning the result on stdout.
 
-OPTIONS
+In most typical scenarios, data in one format needs to  be  decoded  or
+unescaped  from a source format and then immediately encoded or escaped
+into another format for safe use. By  specifying  multiple  transformations
+data can be be passed from one encoding to another.
+
+Decoding  and  unescaping is performed securely, meaning that any input
+data that cannot be decoded or unescaped will cause the  tool  to  exit
+with a non zero exit code.
+
+# OPTIONS
+
        -u, --url-escape
               URL escape data as defined in HTML5
 
@@ -113,15 +118,16 @@ OPTIONS
        -v, --version
               Display the version number.
 
-RETURN VALUE
-       The endec tool returns a non zero exit code if invalid data was encoun-
-       tered during decoding.
+# RETURN VALUE
 
-EXAMPLES
-       In this example, we decode the base64 string, then  entity  encode  the
-       result.
+The endec tool returns a non zero exit code if invalid data was encountered during decoding.
 
-               ~$ endec --base64-decode --entity-escape "VGhpcyAmIHRoYXQK"
-               This &amp; that
+# EXAMPLES
 
+In this example, we decode the base64 string, then  entity  encode  the
+result.
 
+```
+~$ endec --base64-decode --entity-escape "VGhpcyAmIHRoYXQK"
+This &amp; that
+```
