@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_MACRO_DIRS([m4])
 AM_INIT_AUTOMAKE([dist-bzip2])
 LT_INIT
-AC_CONFIG_FILES([Makefile apr-tools.spec endec/Makefile])
+AC_CONFIG_FILES([Makefile apr-tools.spec endec/Makefile nmbe/Makefile])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
