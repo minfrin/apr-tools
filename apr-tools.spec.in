@@ -27,12 +27,16 @@ rm -rf %{_builddir}/%{name}-%{version}/debian
 
 %files
 %{_bindir}/endec
+%{_bindir}/nmbe
 %{_mandir}/man1/endec.1*
+%{_mandir}/man1/nmbe.1*
 
 %doc AUTHORS ChangeLog README
 %license COPYING
 
 %changelog
+* Tue Mar 01 2021 Graham Leggett <minfrin@sharp.fm> 1.1.0-1
+- Add nmbe tool
 * Wed Oct 07 2020 Graham Leggett <minfrin@sharp.fm> - 1.0.0-1
 - Initial version of the package
 
