@@ -207,6 +207,10 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "  all data in that table. Alternatively, the query can be specified exactly using\n"
             "  the query option.\n"
             "\n"
+            "  By default, output is 'echo' encoded, columns are tab separated, and lines are\n"
+            "  ended with a line feed. To get unformatted data, use the 'none' encoding, and\n"
+            "  suppress the trailing linefeed with --no-end-of-line.\n"
+            "\n"
             "OPTIONS\n", msg ? msg : "", n, n);
 
     while (opts[i].name) {
