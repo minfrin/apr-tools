@@ -80,7 +80,7 @@ In this example, we submit a query with arguments.
 In this example, we want the raw value of a single row and column.
 
 ```
-~$ dbd -d "sqlite3" -p "/tmp/database.sqlite3" -x "none" -n -a "1" \\
+~$ dbd -d "sqlite3" -p "/tmp/database.sqlite3" -x "none" -n -a "1" \
   -s "select certificate from users where id = %s" 
 -----BEGIN CERTIFICATE-----
 ...
