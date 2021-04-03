@@ -31,6 +31,7 @@
 #include <apr_getopt.h>
 #include <apr_strings.h>
 #include <apr_hash.h>
+#include "apr_buckets.h"
 
 #include <apr_dbd.h>
 
@@ -100,25 +101,25 @@ static const apr_getopt_option_t
         "query",
         OPT_QUERY,
         0,
-        "  -q, --query\t\tQuery string to run against the database. Expected to return number of rows affected."
+        "  -q, --query\t\t\tQuery string to run against the database. Expected to return number of rows affected."
     },
     {
         "escape",
         OPT_ESCAPE,
         0,
-        "  -e, --escape\t\tEscape the arguments against the given database, using appropriate escaping for that database."
+        "  -e, --escape\t\t\tEscape the arguments against the given database, using appropriate escaping for that database."
     },
     {
         "select",
         OPT_SELECT,
         0,
-        "  -s, --select\t\tRun select queries against the database. Expected to return database rows as results."
+        "  -s, --select\t\t\tRun select queries against the database. Expected to return database rows as results."
     },
     {
         "table",
         OPT_TABLE,
         0,
-        "  -t, --table\t\tRun select queries against the tables in the given database. Expected to return database rows as results."
+        "  -t, --table\t\t\tRun select queries against the tables in the given database. Expected to return database rows as results."
     },
     {
         "argument",
@@ -130,13 +131,13 @@ static const apr_getopt_option_t
         "file-argument",
         OPT_FILE_ARGUMENT,
         1,
-        "  -f, --file-argument file\t\tPass a file containing argument to a prepared statement. '-' for stdin."
+        "  -f, --file-argument file\tPass a file containing argument to a prepared statement. '-' for stdin."
     },
     {
         "null-argument",
         OPT_NULL_ARGUMENT,
         0,
-        "  -z, --null-argument\t\t\tPass a NULL value as an argument to a prepared statement."
+        "  -z, --null-argument\t\tPass a NULL value as an argument to a prepared statement."
     },
     {
         "end-of-column",
@@ -160,7 +161,7 @@ static const apr_getopt_option_t
         "no-end-of-line",
         OPT_NO_END_OF_LINE,
         0,
-        "  -n, --no-end-of-line\tNo separator on last line."
+        "  -n, --no-end-of-line\t\tNo separator on last line."
     },
     {
         "encoding",
@@ -260,11 +261,11 @@ static apr_status_t cleanup_buffer(void *dummy)
 }
 
 static const char *encode_buffer(apr_pool_t *pool, apr_file_t *err,
-        const char *encoding, const char *val, apr_size_t *size)
+        const char *encoding, const char *val, apr_size_t len, apr_size_t *size)
 {
     if (!strcmp("echo", encoding)) {
 
-        val = apr_pescape_echo(pool, val, 1);
+        val = apr_pescape_echo(pool, apr_pstrndup(pool, val, len), 1);
         if (!val) {
             apr_file_printf(err,
                     "Could not quote echo escape data.\n");
@@ -276,7 +277,7 @@ static const char *encode_buffer(apr_pool_t *pool, apr_file_t *err,
 
     else if (!strcmp("base64", encoding)) {
 
-        val = apr_pencode_base64(pool, val, APR_ENCODE_STRING, APR_ENCODE_NONE, size);
+        val = apr_pencode_base64(pool, val, len, APR_ENCODE_NONE, size);
         if (!val) {
             apr_file_printf(err,
                     "Could not base64 escape data.\n");
@@ -287,7 +288,7 @@ static const char *encode_buffer(apr_pool_t *pool, apr_file_t *err,
 
     else if (!strcmp("base64url", encoding)) {
 
-        val = apr_pencode_base64(pool, val, APR_ENCODE_STRING, APR_ENCODE_URL, size);
+        val = apr_pencode_base64(pool, val, len, APR_ENCODE_URL, size);
         if (!val) {
             apr_file_printf(err,
                     "Could not base64url escape data.\n");
@@ -297,6 +298,7 @@ static const char *encode_buffer(apr_pool_t *pool, apr_file_t *err,
     }
 
     else if (!strcmp("none", encoding)) {
+        *size = len;
         return val;
     }
 
@@ -686,6 +688,7 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
         const char *encoding, int header, int noeol, int argc, const char **argv)
 {
 
+    apr_pool_t *tpool;
     const apr_dbd_driver_t *driver = NULL;
     apr_dbd_t *handle = NULL;
     const char *query;
@@ -693,6 +696,7 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
     const void **pargs = NULL;
     apr_dbd_results_t *res = NULL;
     apr_dbd_row_t *row = NULL;
+    apr_bucket_brigade *bb = apr_brigade_create(pool, apr_bucket_alloc_create(pool));
 
     apr_size_t size;
     apr_status_t status;
@@ -700,6 +704,8 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
     char errbuf[MAX_BUFFER_SIZE];
 
     int i, end = 0;
+
+    apr_pool_create(&tpool, pool);
 
     /* init the database, prepare our query */
     if ((status = db_init(pool, err, driver_name, params, &driver, &handle))) {
@@ -753,7 +759,7 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
                         return status;
                     }
                 }
-                name = encode_buffer(pool, err, encoding, name, &size);
+                name = encode_buffer(pool, err, encoding, name, strlen(name), &size);
                 if (!name) {
                     return APR_EGENERAL;
                 }
@@ -771,7 +777,7 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
         /* write the rows */
         for (status = apr_dbd_get_row(driver, pool, res, &row, -1); status != -1; status
                 = apr_dbd_get_row(driver, pool, res, &row, -1)) {
-            const char *entry;
+
             if (status != APR_SUCCESS) {
                 apr_file_printf(
                         err,
@@ -792,10 +798,8 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
                 }
             }
 
-            /* get the entries of each row */
-            i = 0;
-            for (entry = apr_dbd_get_entry(driver, row, i); entry != NULL; entry
-                    = apr_dbd_get_entry(driver, row, i)) {
+            /* get the data from each row */
+            for (i = 0; i < apr_dbd_num_cols(driver, res); i++) {
 
                 if (i > 0) {
                     size = strlen(eoc);
@@ -809,22 +813,68 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
                         return status;
                     }
                 }
-                entry = encode_buffer(pool, err, encoding, entry, &size);
-                if (!entry) {
-                    return APR_EGENERAL;
+
+                status = apr_dbd_datum_get(driver, row, i, APR_DBD_TYPE_BLOB, bb);
+                switch (status) {
+                case APR_SUCCESS: {
+
+                    char *buffer;
+                    const char *entry;
+
+                    status = apr_brigade_pflatten(bb, &buffer, &size, tpool);
+                    if (APR_SUCCESS != status) {
+                        apr_file_printf(
+                                err,
+                                "DBD: Database select '%s' failed while reading column %d: %s\n",
+                                query, i,
+                                apr_strerror(status, errbuf, MAX_BUFFER_SIZE));
+                        return status;
+                    }
+
+                    apr_brigade_cleanup(bb);
+
+                    entry = encode_buffer(tpool, err, encoding, buffer, size, &size);
+                    if (!entry) {
+                        return APR_EGENERAL;
+                    }
+
+                    if (APR_SUCCESS != (status = apr_file_write(out, entry, &size))) {
+                        apr_file_printf(
+                                err,
+                                "DBD: Database select '%s' failed while writing entry: %s\n",
+                                query,
+                                apr_strerror(status, errbuf, MAX_BUFFER_SIZE));
+                        return status;
+                    }
+
+                    break;
                 }
-                if (APR_SUCCESS != (status = apr_file_write(out, entry, &size))) {
+                case APR_ENOENT:
+
+                    if (APR_SUCCESS != (status = apr_file_printf(out, "NULL"))) {
+                        apr_file_printf(
+                                err,
+                                "DBD: Database select '%s' failed while writing column %d: %s\n",
+                                query, i,
+                                apr_strerror(status, errbuf, MAX_BUFFER_SIZE));
+                        return status;
+                    }
+
+                    break;
+                default:
                     apr_file_printf(
                             err,
-                            "DBD: Database select '%s' failed while writing entry: %s\n",
-                            query,
-                            apr_strerror(status, errbuf, MAX_BUFFER_SIZE));
+                            "DBD: Database select '%s' failed while reading column %d: %s\n",
+                            query, i, apr_strerror(status, errbuf,
+                                    MAX_BUFFER_SIZE));
                     return status;
                 }
 
-                i++;
             }
+
             end = 1;
+
+            apr_pool_clear(tpool);
         }
 
     }
