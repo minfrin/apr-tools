@@ -232,6 +232,14 @@ static int help(apr_file_t *out, const char *name, const char *msg, int code,
             "\n"
             "\t~$ dbd -d \"sqlite3\" -p \"/tmp/database.sqlite3\" -a \"1\" -s \"select * from users where id = %%s\" \n"
             "\n"
+            "  In this example, we want the raw value of a single row and column.\n"
+            "\n"
+            "\t~$ dbd -d \"sqlite3\" -p \"/tmp/database.sqlite3\" -x \"none\" -n -a \"1\" \\\\\n"
+    		"\t  -s \"select certificate from users where id = %%s\" \n"
+            "\t-----BEGIN CERTIFICATE-----\n"
+            "\t...\n"
+            "\t-----END CERTIFICATE-----\n"
+            "\n"
             "  Here we escape a dangerous string.\n"
             "\n"
             "\t~$ dbd -d \"sqlite3\" -p \"/tmp/database.sqlite3\" -e \"john';drop table users\" \n"
@@ -704,6 +712,7 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
 
     apr_size_t size;
     apr_status_t status;
+    int rc;
 
     char errbuf[MAX_BUFFER_SIZE];
 
@@ -728,11 +737,11 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
             query = *(argv++);
         }
 
-        if (APR_SUCCESS != (status = apr_dbd_prepare(driver, pool, handle, query,
+        if ((rc = apr_dbd_prepare(driver, pool, handle, query,
                 NULL, &statement))) {
             apr_file_printf(err, "DBD: Database prepare select '%s' failed (using %s): %s\n",
-                    query, driver_name, apr_dbd_error(driver, handle, status));
-            return status;
+                    query, driver_name, apr_dbd_error(driver, handle, rc));
+            return APR_EINVAL;
         }
 
         pargs = dbd_arguments(pool, err, query, args);
@@ -740,11 +749,11 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
             return APR_EINVAL;
         }
 
-        if (APR_SUCCESS != (status = apr_dbd_pbselect(driver, pool, handle, &res,
+        if ((rc = apr_dbd_pbselect(driver, pool, handle, &res,
             statement, 0, pargs))) {
             apr_file_printf(err, "DBD: Database select '%s' failed (using %s): %s\n",
-                    query, driver_name, apr_dbd_error(driver, handle, status));
-            return status;
+                    query, driver_name, apr_dbd_error(driver, handle, rc));
+            return APR_EINVAL;
         }
 
         if (header) {
@@ -779,15 +788,15 @@ static apr_status_t run_select(apr_pool_t *pool, apr_file_t *out, apr_file_t *er
         }
 
         /* write the rows */
-        for (status = apr_dbd_get_row(driver, pool, res, &row, -1); status != -1; status
+        for (rc = apr_dbd_get_row(driver, pool, res, &row, -1); rc != -1; rc
                 = apr_dbd_get_row(driver, pool, res, &row, -1)) {
 
-            if (status != APR_SUCCESS) {
+            if (rc) {
                 apr_file_printf(
                         err,
                         "DBD: Database select '%s' failed while reading row (using %s): %s\n",
-                        query, driver_name, apr_dbd_error(driver, handle, status));
-                return status;
+                        query, driver_name, apr_dbd_error(driver, handle, rc));
+                return APR_EINVAL;
             }
 
             if (end) {
@@ -1098,11 +1107,14 @@ int main(int argc, const char * const argv[])
     case APR_SUCCESS:
         exit(0);
 
-    case APR_EINVAL:
+    case APR_ENOENT:
         exit(1);
 
-    default:
+    case APR_EINVAL:
         exit(2);
+
+    default:
+        exit(3);
     }
 
 }
