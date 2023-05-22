@@ -28,15 +28,19 @@ rm -rf %{_builddir}/%{name}-%{version}/debian
 %files
 %{_bindir}/dbd
 %{_bindir}/endec
+%{_bindir}/jose
 %{_bindir}/nmbe
 %{_mandir}/man1/dbd.1*
 %{_mandir}/man1/endec.1*
+%{_mandir}/man1/jose.1*
 %{_mandir}/man1/nmbe.1*
 
 %doc AUTHORS ChangeLog README
 %license COPYING
 
 %changelog
+* Mon May 22 2023 Graham Leggett <minfrin@sharp.fm> 0.9.0-1
+- Add jose tool
 * Wed Mar 31 2021 Graham Leggett <minfrin@sharp.fm> 0.9.0-1
 - Add dbd tool
 * Tue Mar 01 2021 Graham Leggett <minfrin@sharp.fm> 0.9.0-1

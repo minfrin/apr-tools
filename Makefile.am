@@ -1,5 +1,5 @@
 
-SUBDIRS = dbd endec nmbe
+SUBDIRS = dbd endec nmbe jose
 
 EXTRA_DIST = apr-tools.spec
 
