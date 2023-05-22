@@ -44,6 +44,7 @@
 #include "config.h"
 
 #define OPT_CLAIM 'c'
+#define OPT_NEWLINE 'n'
 #define OPT_READ 'r'
 #define OPT_WRITE 'w'
 #define OPT_PAYLOAD 'p'
@@ -79,6 +80,12 @@ static const apr_getopt_option_t
         OPT_CLAIM,
         1,
         "  -c, --claim name=val\t\tSet the claim with the given name to the given value."
+    },
+    {
+        "no-newline",
+        OPT_NEWLINE,
+        0,
+        "  -n, --no-newline\t\tSuppress the newline at the end of output."
     },
     {
         "read",
@@ -280,7 +287,7 @@ static apr_status_t read_file(const char *fname, apr_file_t * rd, char **buffer,
 }
 
 static apr_status_t write_buffer(apr_file_t * out, const char *buffer,
-                                              apr_size_t length)
+                                              apr_size_t length, int no_newline)
 {
     apr_status_t status;
     apr_size_t l;
@@ -292,7 +299,9 @@ static apr_status_t write_buffer(apr_file_t * out, const char *buffer,
     }
 
     /* write the newline */
-    apr_file_printf(out, "\n");
+    if (!no_newline && length) {
+        apr_file_printf(out, "\n");
+    }
 
     return status;
 }
@@ -464,6 +473,7 @@ int main(int argc, const char *const argv[])
 
     apr_json_value_t *json = NULL;
     int must_json = 0;
+    int no_newline = 0;
 
     /* encoding type is JWT until further notice */
     apr_jose_type_e type = APR_JOSE_TYPE_JWT;
@@ -528,6 +538,10 @@ int main(int argc, const char *const argv[])
         switch (optch) {
         case OPT_CLAIM:{
                 must_json = 1;
+                break;
+            }
+        case OPT_NEWLINE:{
+                no_newline = 1;
                 break;
             }
         case OPT_READ:{
@@ -883,7 +897,7 @@ int main(int argc, const char *const argv[])
     }
 
     /* write the destination */
-    status = write_buffer(wr, buffer, size);
+    status = write_buffer(wr, buffer, size, no_newline);
     if (status != APR_SUCCESS) {
         apr_file_printf(err,
                         "Could not write: %pm\n", &status);
