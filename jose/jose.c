@@ -285,8 +285,6 @@ static apr_status_t write_buffer(apr_file_t * out, const char *buffer,
     apr_status_t status;
     apr_size_t l;
 
-    size = length;
-
     /* write the destination */
     status = apr_file_write_full(out, buffer, length, &l);
     if (status != APR_SUCCESS) {
