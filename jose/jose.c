@@ -284,7 +284,6 @@ static apr_status_t write_buffer(apr_file_t * out, const char *buffer,
 {
     apr_status_t status;
     apr_size_t l;
-    apr_uint32_t size;
 
     size = length;
 
